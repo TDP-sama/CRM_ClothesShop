@@ -46,8 +46,5 @@ Cần JDK 21, Maven, Node.js 22 và một CSDL PostgreSQL.
    ```
 4. Mở http://localhost:5173, đăng ký bằng email trong `ADMIN_EMAILS` để có quyền quản trị.
 
-Kiểm thử: `mvn -f backend/pom.xml test` · Tài liệu API: http://localhost:8080/swagger-ui.html
+Kiểm thử API: Tài liệu API: http://localhost:8080/swagger-ui.html
 
-## Triển khai
-
-Repo có sẵn `Dockerfile` và `render.yaml`. Trên Render chọn **New → Blueprint**, kết nối repo và nhập `DATABASE_URL`, `ADMIN_EMAILS`. Mỗi lần push lên `main` sẽ tự deploy lại.
