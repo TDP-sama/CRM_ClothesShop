@@ -12,7 +12,7 @@ Website bán hàng thời trang: khách xem và đặt hàng, cửa hàng quản
 **Khách hàng**
 - Tìm kiếm không dấu, lọc theo danh mục, size, màu, giá, khuyến mãi
 - Chọn màu/size theo tồn kho, giỏ hàng, đặt hàng thanh toán khi nhận (COD)
-- Theo dõi và hủy đơn, đánh giá sản phẩm đã mua
+- Theo dõi và hủy đơn, nhận email xác nhận và cập nhật trạng thái đơn, đánh giá sản phẩm đã mua
 - 4 giao diện chuyển đổi được: Cơ bản, Tối giản, Năng động, Cao cấp
 
 **Quản trị** (`/quan-tri`)
@@ -23,17 +23,13 @@ Website bán hàng thời trang: khách xem và đặt hàng, cửa hàng quản
 
 ## Công nghệ
 
-Java 21 · Spring Boot 4 · Spring Security · JPA · React 19 · Vite · PostgreSQL (Neon) · Docker · Render
+Java 21 · Spring Boot 4 · Spring Security · JPA · React 19 · Vite · PostgreSQL (Neon) · Redis · Mailpit · Docker · Render
 
 ## Chạy trên máy
 
 Cần JDK 21, Maven, Node.js 22 và một CSDL PostgreSQL.
 
-1. Tạo `backend/.env` (không commit file này):
-   ```properties
-   DATABASE_URL=jdbc:postgresql://<host>/<db>?user=<user>&password=<password>&sslmode=require
-   ADMIN_EMAILS=email-cua-ban@example.com
-   ```
+1. Copy `backend/.env.example` thành `backend/.env` và điền `DATABASE_URL`, `ADMIN_EMAILS` (không commit file `.env`).
 2. Backend (cổng 8080, tự tạo bảng và dữ liệu mẫu):
    ```bash
    mvn -f backend/pom.xml spring-boot:run
@@ -48,3 +44,10 @@ Cần JDK 21, Maven, Node.js 22 và một CSDL PostgreSQL.
 
 Kiểm thử API: Tài liệu API: http://localhost:8080/swagger-ui.html
 
+### Dịch vụ phụ trợ (Docker, tùy chọn)
+
+`docker compose up -d` chạy **Redis** (lưu phiên đăng nhập) và **Mailpit** (hộp thư giả nhận email đơn hàng, xem tại http://localhost:8025). Bật trong `backend/.env` bằng các dòng mẫu có sẵn trong `.env.example`:
+- `spring.profiles.active=redis`
+- `spring.mail.host=localhost` và `spring.mail.port=1025`
+
+Không bật thì web vẫn chạy bình thường: phiên lưu trong bộ nhớ, không gửi email.

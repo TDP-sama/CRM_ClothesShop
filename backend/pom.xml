@@ -41,6 +41,16 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Optional integrations, each enabled only when configured (see application.properties):
+             Redis-backed sessions (profile "redis") and outgoing email (Mailpit locally). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-session-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
         <!-- Swagger UI at /swagger-ui.html, OpenAPI spec at /v3/api-docs -->
         <dependency>
             <groupId>org.springdoc</groupId>

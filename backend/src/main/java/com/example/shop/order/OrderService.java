@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -38,13 +39,15 @@ public class OrderService {
     private final ProductVariantRepository variants;
     private final UserService users;
     private final InventoryService inventory;
+    private final ApplicationEventPublisher events;
 
     public OrderService(OrderRepository orders, ProductVariantRepository variants, UserService users,
-            InventoryService inventory) {
+            InventoryService inventory, ApplicationEventPublisher events) {
         this.orders = orders;
         this.variants = variants;
         this.users = users;
         this.inventory = inventory;
+        this.events = events;
     }
 
     public static ShopConfig config() {
@@ -92,6 +95,7 @@ public class OrderService {
         // Taken after saving so the stock ledger can reference the order number.
         quantities.forEach((variantId, quantity) -> inventory.change(locked.get(variantId), -quantity,
                 MovementType.SALE, null, null, saved.getCode(), user.getEmail()));
+        events.publishEvent(new OrderEvents.Placed(saved.getId()));
         return toDto(saved);
     }
 
@@ -146,6 +150,7 @@ public class OrderService {
             restock(order, actorEmail);
         }
         order.setStatus(status);
+        events.publishEvent(new OrderEvents.StatusChanged(order.getId(), status));
     }
 
     /** Puts cancelled items back on the shelf; variants deleted since the purchase are skipped. */

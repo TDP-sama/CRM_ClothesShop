@@ -14,3 +14,5 @@ services:
         sync: false
       - key: SESSION_COOKIE_SECURE
         value: "true"
+      - key: APP_BASE_URL # links in order emails (sent only if SPRING_MAIL_HOST etc. are configured)
+        value: https://moda-shop-535e.onrender.com

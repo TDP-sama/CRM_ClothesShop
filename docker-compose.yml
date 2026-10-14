@@ -1,0 +1,23 @@
+# Local helper services for development: `docker compose up -d` (Docker Desktop must be running).
+# The app itself still runs with `mvn spring-boot:run` + `npm run dev` and connects to these on localhost.
+# Production (Render) does not use this file.
+services:
+  # Session store, used when the app runs with the "redis" profile (spring.profiles.active=redis).
+  redis:
+    image: redis:8.8
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  # Fake mail server: catches every email the app sends. Inbox UI at http://localhost:8025, SMTP on port 1025.
+  mailpit:
+    image: axllent/mailpit:v1.31
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+
+volumes:
+  redis-data:
