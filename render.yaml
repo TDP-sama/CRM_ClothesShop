@@ -1,0 +1,16 @@
+# Render Blueprint: one Docker web service (see Dockerfile). Secrets marked sync: false are entered in the
+# Render dashboard when the Blueprint is created; they are never stored in this repository.
+services:
+  - type: web
+    name: moda-shop
+    runtime: docker
+    plan: free
+    region: ohio # same area as the Neon database (aws us-east-2)
+    healthCheckPath: /api/config
+    envVars:
+      - key: DATABASE_URL # jdbc:postgresql://<host>/neondb?user=...&password=...&sslmode=require
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
