@@ -1,5 +1,6 @@
 package com.example.shop.common;
 
+import com.example.shop.catalog.ProductExcelService;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
@@ -33,6 +34,14 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 errors.isEmpty() ? "Dữ liệu không hợp lệ" : errors.values().iterator().next());
         problem.setProperty("errors", errors);
         return ResponseEntity.badRequest().body(problem);
+    }
+
+    /** An Excel product import with problems: nothing was changed; {@code errors} lists [{row, message}]. */
+    @ExceptionHandler(ProductExcelService.ExcelImportException.class)
+    ProblemDetail handleExcelImport(ProductExcelService.ExcelImportException e) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        problem.setProperty("rowErrors", e.getErrors());
+        return problem;
     }
 
     /** Two writers changed the same row at once; the client should reload and retry. */

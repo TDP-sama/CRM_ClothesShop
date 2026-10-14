@@ -31,8 +31,9 @@ async function request(method, path, body, { retried = false } = {}) {
   const unsafe = method !== 'GET'
   if (unsafe) await ensureCsrf()
 
+  const isForm = body instanceof FormData // file uploads: the browser sets the multipart Content-Type
   const headers = { Accept: 'application/json' }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
   if (unsafe) {
     const token = readXsrfCookie()
     if (token) headers['X-XSRF-TOKEN'] = token
@@ -42,7 +43,7 @@ async function request(method, path, body, { retried = false } = {}) {
     method,
     headers,
     credentials: 'same-origin',
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
   })
 
   // A stale or missing CSRF token: fetch a fresh one and retry once.
@@ -56,7 +57,9 @@ async function request(method, path, body, { retried = false } = {}) {
   const data = text ? safeJson(text) : null
   if (!res.ok) {
     const message = data?.detail || defaultMessage(res.status)
-    throw new ApiError(res.status, message, data?.errors || {})
+    const error = new ApiError(res.status, message, data?.errors || {})
+    error.rowErrors = data?.rowErrors || [] // Excel import: [{ row, message }]
+    throw error
   }
   return data
 }
@@ -91,6 +94,7 @@ function query(params) {
 export const api = {
   // Auth
   me: () => request('GET', '/api/auth/me'),
+  authProviders: () => request('GET', '/api/auth/providers'),
   login: (email, password) => request('POST', '/api/auth/login', { email, password }),
   register: (fullName, email, password) => request('POST', '/api/auth/register', { fullName, email, password }),
   logout: async () => {
@@ -124,6 +128,12 @@ export const api = {
     createProduct: (data) => request('POST', '/api/admin/products', data),
     updateProduct: (id, data) => request('PUT', `/api/admin/products/${id}`, data),
     hideProduct: (id) => request('DELETE', `/api/admin/products/${id}`),
+    exportProductsUrl: '/api/admin/products/export',
+    importProducts: (file) => {
+      const form = new FormData()
+      form.append('file', file)
+      return request('POST', '/api/admin/products/import', form)
+    },
     createCategory: (data) => request('POST', '/api/admin/categories', data),
     updateCategory: (id, data) => request('PUT', `/api/admin/categories/${id}`, data),
     deleteCategory: (id) => request('DELETE', `/api/admin/categories/${id}`),

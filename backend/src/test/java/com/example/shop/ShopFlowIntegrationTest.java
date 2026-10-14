@@ -209,14 +209,17 @@ class ShopFlowIntegrationTest {
         // and its stock is not overwritten from the product form (it only changes through the inventory).
         String update = """
                 {"name":"Áo khoác mới","price":450000,"categoryId":%d,"active":true,"featured":false,
-                 "variants":[{"size":"M","color":"Đen","stock":9}]}
+                 "variants":[{"size":"M","color":"Đen","stock":9},{"size":"XL","color":"Đen","stock":4}]}
                 """.formatted(categoryId);
+        // Also adds a variant to an existing product (regression: its initial stock movement needs its id).
         mvc.perform(json(put("/api/admin/products/" + productId), ADMIN, update))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.variants", hasSize(1)))
+                .andExpect(jsonPath("$.variants", hasSize(2)))
                 .andExpect(jsonPath("$.variants[0].id").value(mId))
                 .andExpect(jsonPath("$.variants[0].stock").value(5))
-                .andExpect(jsonPath("$.variants[0].sku").value("AO-KHOAC-MOI-DEN-M"));
+                .andExpect(jsonPath("$.variants[0].sku").value("AO-KHOAC-MOI-DEN-M"))
+                .andExpect(jsonPath("$.variants[1].stock").value(4))
+                .andExpect(jsonPath("$.variants[1].sku").value("AO-KHOAC-MOI-DEN-XL"));
 
         mvc.perform(json(post("/api/admin/products"), ADMIN, body.replace("600000", "100000")))
                 .andExpect(status().isBadRequest());

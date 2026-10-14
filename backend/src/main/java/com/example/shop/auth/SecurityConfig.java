@@ -2,7 +2,12 @@ package com.example.shop.auth;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -32,11 +37,23 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, CookieCsrfTokenRepository csrfTokenRepository,
-            UserService users) throws Exception {
+            UserService users, ObjectProvider<ClientRegistrationRepository> registrations,
+            ExternalOidcUserService oidcUserService, @Value("${app.base-url}") String baseUrl) throws Exception {
+        ClientRegistrationRepository clients = registrations.getIfAvailable();
+        if (clients != null) {
+            // "Sign in with Google" via Keycloak; only when the "keycloak" profile defines a client registration.
+            String home = baseUrl.replaceAll("/+$", "");
+            http.oauth2Login(oauth -> oauth
+                    .loginPage("/dang-nhap") // the SPA's page; disables Spring's generated /login page
+                    .authorizationEndpoint(endpoint -> endpoint.authorizationRequestResolver(googleHint(clients)))
+                    .userInfoEndpoint(info -> info.oidcUserService(oidcUserService))
+                    .successHandler((request, response, authentication) -> response.sendRedirect(home + "/"))
+                    .failureHandler((request, response, e) -> response.sendRedirect(home + "/dang-nhap?loi=google")));
+        }
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/auth/providers").permitAll()
                         // Storefront browsing is public; writing a review is not.
                         .requestMatchers(HttpMethod.GET, "/api/config", "/api/categories", "/api/products",
                                 "/api/products/**").permitAll()
@@ -91,6 +108,15 @@ public class SecurityConfig {
     private static boolean isLoggedIn(Authentication authentication) {
         return authentication != null && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken);
+    }
+
+    /** Asks Keycloak to go straight to Google ({@code kc_idp_hint}) instead of showing its own login page. */
+    private static OAuth2AuthorizationRequestResolver googleHint(ClientRegistrationRepository clients) {
+        DefaultOAuth2AuthorizationRequestResolver resolver =
+                new DefaultOAuth2AuthorizationRequestResolver(clients, "/oauth2/authorization");
+        resolver.setAuthorizationRequestCustomizer(request ->
+                request.additionalParameters(params -> params.put("kc_idp_hint", "google")));
+        return resolver;
     }
 
     /** Shared with {@link AuthController} so login can rotate the CSRF token. */

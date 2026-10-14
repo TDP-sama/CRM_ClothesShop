@@ -999,6 +999,17 @@ input[type='radio'] { accent-color: var(--accent); width: 16px; height: 16px; }
 .chip-static { cursor: default; font-size: 0.78rem; padding: 3px 8px; min-width: 0; }
 code { font-size: 0.85em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
 
+/* Excel import errors */
+.import-errors { display: flex; flex-direction: column; gap: 10px; }
+.import-errors-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.import-errors .table { color: var(--text); background: var(--surface); border-radius: var(--radius-sm); }
+
+/* Sign in with Google */
+.google-btn { gap: 10px; text-transform: none; letter-spacing: 0; }
+.divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 0.8rem; }
+.divider::before,
+.divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
 /* Reports & charts */
 .segmented { display: inline-flex; padding: 3px; gap: 2px; background: var(--surface-2); border-radius: var(--radius-btn); }
 .segmented button { padding: 7px 14px; border-radius: var(--radius-btn); font-size: 0.88rem; font-weight: 500; color: var(--muted); }

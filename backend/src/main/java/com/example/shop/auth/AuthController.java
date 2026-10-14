@@ -7,7 +7,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.Map;
 import java.util.Set;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -69,14 +72,23 @@ public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final CookieCsrfTokenRepository csrfTokenRepository;
+    private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
     private final SecurityContextHolderStrategy contextHolder = SecurityContextHolder.getContextHolderStrategy();
 
     public AuthController(UserService userService, AuthenticationManager authenticationManager,
-            CookieCsrfTokenRepository csrfTokenRepository) {
+            CookieCsrfTokenRepository csrfTokenRepository,
+            ObjectProvider<ClientRegistrationRepository> clientRegistrations) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.csrfTokenRepository = csrfTokenRepository;
+        this.clientRegistrations = clientRegistrations;
+    }
+
+    /** Which external sign-in options exist, so the SPA shows the Google button only when it works. */
+    @GetMapping("/providers")
+    public Map<String, Boolean> providers() {
+        return Map.of("google", clientRegistrations.getIfAvailable() != null);
     }
 
     /** Sets the {@code XSRF-TOKEN} cookie; the SPA echoes it in the {@code X-XSRF-TOKEN} header on writes. */

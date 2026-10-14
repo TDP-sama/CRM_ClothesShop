@@ -19,5 +19,24 @@ services:
       - "8025:8025"
     restart: unless-stopped
 
+  # Identity broker for "Sign in with Google", used when the app runs with the "keycloak" profile.
+  # Admin console: http://localhost:8180 (admin / admin, development only). Realm "moda" and its client are imported
+  # from keycloak/realm-moda.json on first start; the Google identity provider is added once in the console.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.5
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    volumes:
+      # The whole data dir: it exists in the image owned by the keycloak user, so the new volume inherits that
+      # ownership (a volume on a path missing from the image is created root-owned and Keycloak cannot write it).
+      - keycloak-data:/opt/keycloak/data
+      - ./keycloak:/opt/keycloak/data/import:ro
+    restart: unless-stopped
+
 volumes:
   redis-data:
+  keycloak-data:

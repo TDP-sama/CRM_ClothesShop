@@ -1,7 +1,9 @@
 package com.example.shop.auth;
 
 import jakarta.persistence.criteria.Predicate;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -65,6 +67,29 @@ public class UserService implements UserDetailsService, ApplicationRunner {
             }
             throw e;
         }
+    }
+
+    /**
+     * The local account for someone who signed in with Google (through Keycloak). Links to an existing account with
+     * the same email, otherwise creates a customer (or an admin, for ADMIN_EMAILS). Accounts created this way get a
+     * random password nobody knows, so they can only sign in with Google until a password is set.
+     */
+    @Transactional
+    public AppUser findOrCreateExternal(String email, boolean emailVerified, String fullName) {
+        if (email == null || email.isBlank() || !emailVerified) {
+            // Without a verified email anyone could claim someone else's address and take over their account.
+            throw new IllegalArgumentException("A verified email address is required");
+        }
+        String normalized = normalizeEmail(email);
+        return repository.findByEmail(normalized).orElseGet(() -> {
+            byte[] random = new byte[32];
+            new SecureRandom().nextBytes(random);
+            String unusablePassword = passwordEncoder.encode(HexFormat.of().formatHex(random));
+            Role role = adminEmails.contains(normalized) ? Role.ADMIN : Role.CUSTOMER;
+            String name = fullName == null || fullName.isBlank() ? null : fullName.trim();
+            return repository.save(new AppUser(normalized, unusablePassword,
+                    name != null && name.length() > 100 ? name.substring(0, 100) : name, role));
+        });
     }
 
     /** The account behind an authenticated principal name (its email). */

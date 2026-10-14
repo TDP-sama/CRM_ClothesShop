@@ -1,0 +1,28 @@
+{
+  "realm": "moda",
+  "displayName": "MODA",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "clients": [
+    {
+      "clientId": "moda-shop",
+      "name": "MODA shop",
+      "description": "The shop backend (Spring Security OAuth2 login). The secret is for local development only.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "moda-dev-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/login/oauth2/code/keycloak",
+        "http://localhost:8080/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": ["http://localhost:5173", "http://localhost:8080"]
+    }
+  ]
+}

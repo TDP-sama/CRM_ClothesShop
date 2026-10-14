@@ -88,7 +88,9 @@ public class AdminCatalogService {
         p.setName(in.name().trim());
         p.setCategory(category(in.categoryId()));
         Map<ProductVariant, Integer> created = apply(p, in);
-        products.saveAndFlush(p);
+        // p is managed: flush persists the new variants themselves (so they get ids). saveAndFlush would merge,
+        // which persists *copies* of new children and leaves the instances in `created` without ids.
+        products.flush();
         openNewVariants(created, actorEmail);
         return toAdmin(p);
     }

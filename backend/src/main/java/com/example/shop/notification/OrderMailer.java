@@ -50,6 +50,9 @@ public class OrderMailer {
     @TransactionalEventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     public void onPlaced(OrderEvents.Placed event) {
+        if (mailSender.getIfAvailable() == null) {
+            return; // email not configured: skip without touching the database
+        }
         orders.findById(event.orderId()).ifPresent(order -> send(order,
                 "Xác nhận đơn hàng " + order.getCode(),
                 "Cảm ơn bạn đã đặt hàng tại MODA! Chúng tôi đã nhận được đơn hàng của bạn và sẽ liên hệ để xác nhận sớm nhất."));
@@ -66,7 +69,7 @@ public class OrderMailer {
             case CANCELLED -> "Đơn hàng của bạn đã được hủy. Nếu đây là nhầm lẫn, vui lòng liên hệ cửa hàng.";
             case PENDING -> null;
         };
-        if (message == null) {
+        if (message == null || mailSender.getIfAvailable() == null) {
             return;
         }
         orders.findById(event.orderId()).ifPresent(order -> send(order,

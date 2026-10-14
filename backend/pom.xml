@@ -51,6 +51,17 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
+        <!-- "Sign in with Google" through Keycloak (profile "keycloak"); inactive without client registrations. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-oauth2-client</artifactId>
+        </dependency>
+        <!-- Excel (.xlsx) import/export of products in the admin area -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.5.1</version>
+        </dependency>
         <!-- Swagger UI at /swagger-ui.html, OpenAPI spec at /v3/api-docs -->
         <dependency>
             <groupId>org.springdoc</groupId>
